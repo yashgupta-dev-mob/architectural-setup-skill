@@ -1,0 +1,10 @@
+dev/runs/
+dev/compilecheck/
+dev/mincheck/
+dev/samples/*/build/
+dev/samples/*/.dart_tool/
+.dart_tool/
+dev/samples/*/.idea/
+dev/samples/*/*.iml
+dev/samples/*/.flutter-plugins-dependencies
+dev/followup_parts/
