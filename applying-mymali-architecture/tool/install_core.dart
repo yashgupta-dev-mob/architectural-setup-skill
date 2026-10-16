@@ -287,7 +287,7 @@ String _adapt(String text, String package, List<String> hosts) {
 /// modules, and drops the markers themselves.
 String _rulesFor(String text, Set<String> installed) {
   final block = RegExp(
-    r'<!-- module: ([a-z-]+) -->\n(.*?)<!-- /module -->\n?',
+    r'<!-- module: ([a-z0-9-]+) -->\n(.*?)<!-- /module -->\n?',
     dotAll: true,
   );
   return text.replaceAllMapped(

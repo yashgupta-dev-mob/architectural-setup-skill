@@ -28,9 +28,10 @@ contract; **a feature never moves to another strategy** (no cache added to
 a network-only feature, no offline queue, no local-first) unless the user
 asks for that change in so many words.
 
+<!-- FILL: one row per feature, e.g. `notes` · network-only · every load hits the network; a failed load shows the error -->
+
 | Feature | Strategy | What that means here |
 |---|---|---|
-<!-- FILL: one row per feature, e.g. `notes` · network-only · every load hits the network; a failed load shows the error -->
 
 Strategies:
 
@@ -552,9 +553,10 @@ UniversalFormField(
 Files kept as they were, which predate these rules. Leave them alone unless
 asked, and never use them as a pattern:
 
+<!-- FILL: one row per file kept outside the architecture, or "none" -->
+
 | File | Problem |
 |---|---|
-<!-- FILL: one row per file kept outside the architecture, or "none" -->
 
 ---
 

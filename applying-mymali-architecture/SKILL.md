@@ -122,6 +122,9 @@ moved and deleted; absent → nothing happens.
 | A home widget swapped in place on sign-in / sign-out | a `redirect` between exactly those two locations, so routes the old app left alone stay untouched |
 | A "Retry" text button on a failed screen | `ReloadWidget`; its "Retry" is the button's tooltip and label for screen readers |
 | A settings switch row | a Material `SwitchListTile` with theme colours (the UI kit has no switch yet) |
+| A floating action button | a Material `FloatingActionButton` with theme or tone colours (the kit has none) |
+| Exceptions the old code let propagate (TLS errors, cancels) | `NetworkingService` turns every "no response" into an `AppException`; say so in `MIGRATION_NOTES.md` |
+| A helper several data sources share (reading an error body) | `lib/core/utils/`, app-specific, named for what it does |
 | A header on every request | default headers (token) or one header getter in the data source, key from `Env` |
 | An interceptor (e.g. 401 → sign out) | the repository maps 401 to an `UnauthorizedFailure`; the bloc that got it reports `AuthSignedOutByServer` to `AuthBloc` — same trigger, same effect, nothing more |
 | A toast | a `SnackBar` with the same text, at the same moment (a toast is a passing note); the toast package goes |
