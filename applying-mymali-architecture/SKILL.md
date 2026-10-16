@@ -114,6 +114,9 @@ moved and deleted; absent → nothing happens.
 | Old code | In MyMali's shape |
 |---|---|
 | A 204-only success | `NetworkingService` returns 204 as `ErrorResponse`; the data source treats `errorCode == '204'` as success, and 200 as an error, as before |
+| Any 2xx is a success (Dio's default) | the data source also treats an `ErrorResponse` whose `errorCode` starts with `2` as success |
+| A cache expiry with a strict boundary ("older than or equal to 10 min is stale") | `maxAge` plus the exact boundary check, and the delete of a stale entry, in the local data source |
+| Device-first sync rules (pending, push, sync) | in the repository (`push<X>`, `sync<X>`), as MyMali's wishlist; the bloc only calls the use cases |
 | A timeout of N seconds | `BaseOptions` of that host in `BaseApiRepo`, same N: Dio's connect / send / receive timeouts for the kinds the app set; a whole-request timeout (`http`'s `.timeout(N)`) becomes `connectTimeout` and `receiveTimeout` of N, noted in `MIGRATION_NOTES.md` as the nearest Dio equivalent |
 | `ThemeData(primarySwatch: …)`, `ThemeData.dark()`, a seed | `AppTheme.light` / `.dark` return that same `ThemeData`, values from `AppColors`, plus `AppTones`; never switch it to another constructor |
 | A home widget swapped in place on sign-in / sign-out | a `redirect` between exactly those two locations, so routes the old app left alone stay untouched |
