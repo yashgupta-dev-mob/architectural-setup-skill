@@ -229,7 +229,9 @@ X toEntity()
 - Abstract `interface class` plus an `…Impl`; dependencies come in through
   the constructor.
 - Return a **model** or throw a **typed exception** from
-  `data/exceptions/`. Never return JSON maps, `Either` or entities.
+  `core/app/exceptions/` (`ServerException`, `ConnectionException` in
+  `api_exceptions.dart`, shared) or the feature's `data/exceptions/` (its
+  own). Never return JSON maps, `Either` or entities.
 - Split by responsibility: `XRemoteDataSource` (HTTP through
   `Networking`), `XLocalDataSource` (device storage), and for auth an
   `AuthLocalDataSource` that alone reads and writes the token.
@@ -261,7 +263,11 @@ X toEntity()
    `pathParameters:`.
 4. **Headers.** The default host gets `Content-Type: application/json`
    when there is a body, and `Authorization: Bearer <token>` when a token
-   is saved (read at request time). Pass `headers:` to add or override
+   is saved (read at request time) and `NetworkingService` was given
+   `secureStorage`. Give it `secureStorage` only when the app sent exactly
+   that header on every call to that host; otherwise leave it out and
+   reproduce the old headers per call. A body the app sent in another
+   encoding keeps its `Content-Type`. Pass `headers:` to add or override
    headers **for that call only**; a header every call to a host needs
    (an API key) comes from one getter in the data source, with the key
    injected from `Env` through DI.
@@ -286,7 +292,8 @@ Future<NoteModel> createNote(NoteDraftModel draft) async {
       endpoint: Endpoints.notes,
       data: draft.toJson(),
     );
-  } on AppException catch (e) {
+  } on AppException catch (e) {   // app_exceptions.dart, imported `show AppException`:
+                                  // it has a ServerException of its own
     throw ConnectionException(e.toString());   // no response arrived
   }
 
@@ -322,6 +329,12 @@ second client.
   imports `flutter_secure_storage`; `DeviceSecureStorage.init()` runs in
   `bootstrap.dart` and wipes what a previous install left behind (the iOS
   Keychain survives an uninstall).
+- **Updates are not fresh installs.** `init()` wipes the store when the
+  `DeviceSecureStorage.installedKey` flag is missing, which is true for
+  every user updating from a build without this architecture. If that
+  build already kept anything in `flutter_secure_storage`, `bootstrap()`
+  sets the flag first whenever one of the old build's prefs keys exists, so
+  only a true fresh install is wiped.
 - **Earlier builds** kept the token in SharedPreferences under the app's
   old key. `AuthLocalDataSource.readToken` moves it over on first read and
   deletes the prefs copy, so nobody is signed out by the update. Keep that
@@ -448,7 +461,7 @@ PrimaryButton(
   `CircleIconButton` (round icon button). A new kind of button goes in
   `lib/core/widgets/buttons/`, generic and theme-driven, and into
   section 21.
-- Small inline text actions ("Retry", "Edit") may use Material
+- Small inline text actions ("Edit", "Resend code") may use Material
   `TextButton` with theme styles.
 
 ---
@@ -478,7 +491,12 @@ UniversalFormField(
   (text, phone, password via `obscureText`), `OtpConfig`,
   `DatePickerConfig`, `TimePickerConfig`, `DropdownConfig`,
   `MultiChipDropdownConfig`, `SearchConfig`, `MultiChipConfig`,
-  `RadioConfig`, `ChoiceChipsConfig`.
+  `RadioConfig`, `ChoiceChipsConfig`, `RatingConfig`.
+- **Implemented types:** `text`, `phone`, `search`, `dropdown`,
+  `multiChipField`, `radio`, `date`, `time`, `otp`, `choiceChips`,
+  `rating`. Every other `UFFType` value renders nothing yet: for such an
+  input (a switch, a checkbox, a slider) use the Material widget with theme
+  colours, or add the field to the universal system (below).
 - Errors held in a bloc go in the config's `errorText`.
 - **Keep `initialValue: ''` (non-null)** on a text field unless you pass
   your own `controller` with `useController: true`.
@@ -690,13 +708,13 @@ a feature widget and stays in the feature.
 
 | Component | File | Use it for | Options |
 |---|---|---|---|
-| `ProductCard` | `product_card.dart` | A product tile in a grid or rail | `testId`, `title`, `price`, `mrp`, `discountPercent`, `inStock`, `quantity`, `isWishlisted`, `onWishlistPressed`, `onAdd`, `onIncrement`, `onDecrement`, `onTap`; `ProductCard.detailsHeightFor(context)` |
-| `ProductListTile` | `product_list_tile.dart` | A product row in a vertical list | as `ProductCard`, plus `caption`, `framed`, `controlPlacement`, `actionLabel`, `onAction` |
+| `ProductCard` | `product_card.dart` | A product tile in a grid or rail | `testId`, `title`, `subtitle`, `imageUrl`, `price`, `mrp`, `discountPercent`, `soldCount`, `variantLabel`, `inStock`, `isLowStock`, `isComingSoon`, `formatPrice`, `mrpLabel`, `inStockLabel`, `lowStockLabel`, `outOfStockLabel`, `comingSoonLabel`, `soldLabel`, `discountLabel`, `quantity`, `isWishlisted`, `onWishlistPressed`, `onAdd`, `onIncrement`, `onDecrement`, `onTap`; `ProductCard.detailsHeightFor(context)` |
+| `ProductListTile` | `product_list_tile.dart` | A product row in a vertical list | the `ProductCard` keys and callbacks, plus `formatPrice`, `outOfStockLabel`, `comingSoonLabel`, `discountLabel`, `caption`, `addLabel`, `keyPrefix`, `imageSize`, `framed`, `variantLabel`, `priceNote`, `controlPlacement`, `addIcon`, `tonalAdd`, `actionLabel`, `actionIcon`, `onAction`, `onLongPress` |
 | `ProductGrid` / `SliverProductGrid` | `product_grid.dart` | Two-column grid of `ProductCard`s | `itemCount`, `itemBuilder` |
-| `ProductRail` | `product_rail.dart` | Sideways-scrolling row of `ProductCard`s | `itemCount`, `itemBuilder`, `trailing` |
-| `ExploreMoreCard` | `explore_more_card.dart` | Last tile of a rail | `countLabel`, `onTap`, `imageUrls` |
+| `ProductRail` | `product_rail.dart` | Sideways-scrolling row of `ProductCard`s | `itemCount`, `itemBuilder`, `trailing`, `horizontalPadding` |
+| `ExploreMoreCard` | `explore_more_card.dart` | Last tile of a rail | `countLabel`, `onTap`, `label`, `imageUrls`, `semanticLabel` |
 | `OrderLineTile` | `order_line_tile.dart` | One line of a placed order | `title`, `quantity`, `unitPrice`, `total`, `imageUrl` |
-| `QuantityStepper` | `quantity_stepper.dart` | "− n +" for a quantity | `quantity`, `onIncrement`, `onDecrement`, `filled`, `removeAtOne` |
+| `QuantityStepper` | `quantity_stepper.dart` | "− n +" for a quantity | `quantity`, `onIncrement`, `onDecrement`, `incrementKey`, `decrementKey`, `height`, `buttonWidth`, `filled`, `removeAtOne` |
 | `CartSummaryBar` | `../cart/cart_summary_bar.dart` | Floating "View cart · N items" pill | `itemCount`, `onPressed`, `thumbnailUrls`, `label` |
 <!-- /module -->
 
@@ -709,18 +727,18 @@ a feature widget and stays in the feature.
 | `FilterChipButton` | `chips/filter_chip_button.dart` | Pill-shaped filter trigger or pickable chip; tabs on a `PageHeader` | `label`, `icon`, `showDropdownArrow`, `selected`, `fillWhenSelected`, `onHeader`, `onPressed` |
 | `SectionHeader` | `section_header.dart` | Section title with an optional "View All →" | `title`, `actionLabel`, `onAction`, `actionKey` |
 | `SectionLabel` | `section_label.dart` | Small uppercase caption naming a block | `title`, `padding` |
-| `PageHeader` | `page_header.dart` | The app bar of every page with a back button (section 11) | `title`, `onBack`, `subtitle`, `trailing`, `bottom`, `backKey`, `backTooltip` |
+| `PageHeader` | `page_header.dart` | The app bar of every page with a back button (section 11) | `title`, `onBack`, `subtitle`, `subtitleKey`, `trailing`, `bottom`, `backKey`, `backTooltip` |
 | `IconListTile` | `icon_list_tile.dart` | A tappable row in a list of choices or settings | `icon`, `title`, `subtitle`, `overline`, `onTap`, `leading`, `showChevron`, `isLoading`, `filled`, `badgeLabel`, `dense` |
 | `FormSectionTitle` | `form_section_title.dart` | Heading of a group of fields | `title`, `icon`, `description`, `topPadding` |
-| `AppSearchBar` | `search/app_search_bar.dart` | The search input | `onChanged`, `hintText`, `initialValue`, `autofocus`, `onSubmitted` |
-| `SearchTriggerBar` | `search/search_trigger_bar.dart` | A bar that opens a search screen | `onTap`, `hintText` |
+| `AppSearchBar` | `search/app_search_bar.dart` | The search input | `onChanged`, `hintText`, `initialValue`, `autofocus`, `onSubmitted`, `trailingIcon`, `onTrailingPressed`, `trailingTooltip` |
+| `SearchTriggerBar` | `search/search_trigger_bar.dart` | A bar that opens a search screen | `onTap`, `hintText`, `onCameraTap`, `cameraTooltip` |
 
 ### Surfaces and feedback
 
 | Component | File | Use it for | Options |
 |---|---|---|---|
-| `AppCard` | `app_card.dart` | A rounded surface grouping one block of a page | `child`, `padding`, `title`, `icon`, `trailing`, `onHeaderTap`, `accent`; `AppCard.divider(context)` |
-| `ReloadWidget` | `reload_widget.dart` | Centred error message with a retry button, for `status == failure` | `errorMessage`, `onReload` |
+| `AppCard` | `app_card.dart` | A rounded surface grouping one block of a page | `child`, `padding`, `title`, `icon`, `trailing`, `onHeaderTap`, `headerKey`, `accent`; `AppCard.divider(context)` |
+| `ReloadWidget` | `reload_widget.dart` | Centred error message with a retry button, for `status == failure` | `errorMessage`, `onReload`, `color`; its button is a refresh icon whose tooltip is "Retry" |
 | `ProgressIndecator` | `progress_indecator.dart` | Spinner for a pane with no skeleton | `color`, `strokeWidth` |
 | `AppInfoSheet` | `sheets/app_info_sheet.dart` | A message the user acknowledges (section 22) | `title`, `message`, `tone`, `icon`, `actionLabel`; `show` → `bool` |
 | `AppPickerSheet` | `sheets/app_picker_sheet.dart` | A bottom sheet to choose something | `title`, `icon`, `child`, `footer`; `show<T>` |
@@ -755,7 +773,10 @@ theme's colours in the effect. Never draw bones by hand.
   never from a bloc.
 - **Every text the user sees is kept word for word** when code moves into
   this architecture; only the widget that shows it follows this table.
-- Do not add an `AlertDialog` or a hand-built message sheet.
+- Do not add an `AlertDialog` or a hand-built message sheet for a
+  message. A confirmation with two choices ("Cancel" / "Delete") that the
+  app already had keeps both choices: keep its dialog (listed in section 16)
+  until `AppInfoSheet` gains a second action.
 
 <!-- module: analytics -->
 ---
@@ -782,5 +803,7 @@ theme's colours in the effect. Never draw bones by hand.
 <!-- module: ga4-meta -->
 - **Google Analytics 4 and Meta** are `AnalyticsDestination`s behind
   `MultiDestinationAnalyticsService`; naming rules live in
-  `analytics_event_mapper.dart`.
+  `analytics_event_mapper.dart`. Event names and parameters the app
+  already sends to GA4 or Meta reach them unchanged: add a special name
+  to the mapper only when the old app sent one.
 <!-- /module -->

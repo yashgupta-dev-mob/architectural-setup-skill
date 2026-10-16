@@ -1,3 +1,4 @@
+// GENERIC: doc comments made neutral (no Mali Coins).
 import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
@@ -32,10 +33,10 @@ class AppTones extends ThemeExtension<AppTones> {
     rating: AppColors.star,
   );
 
-  /// Something good: coins earned, an order delivered.
+  /// Something good: a reward earned, an order delivered.
   final Color success;
 
-  /// A calm note: coins spent on purpose.
+  /// A calm note: credit spent on purpose.
   final Color info;
 
   /// Warm attention: a gift, a bonus.

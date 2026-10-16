@@ -1,3 +1,4 @@
+// GENERIC: doc example made neutral (no MyMali address).
 import 'package:flutter/material.dart';
 
 /// How an [IconListTile] frames its icon.
@@ -40,8 +41,8 @@ class IconListTile extends StatelessWidget {
   /// Muted line under the title.
   final String? subtitle;
 
-  /// Small muted caption above the title, e.g. "Orders" over
-  /// "orders@getmymali.com" on Help & Support.
+  /// Small muted caption above the title, e.g. "Email" over
+  /// "support@example.com" on a help page.
   final String? overline;
 
   /// Null disables the row.

@@ -1,7 +1,8 @@
+// GENERIC: MyMali's SectionLabel with neutral doc examples.
 import 'package:flutter/material.dart';
 
 /// A small uppercase caption that names the block under it, with a short
-/// accent bar before it: "WAYS TO EARN", "COIN HISTORY". Lighter than a
+/// accent bar before it: "RECENT ACTIVITY", "SETTINGS". Lighter than a
 /// [SectionHeader]; use it for the sections of a single page rather than
 /// the rails of a feed.
 class SectionLabel extends StatelessWidget {

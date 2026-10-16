@@ -1,3 +1,4 @@
+// GENERIC: the date and time cases use the field's label and the configs' hintText instead of fixed demo text.
 // ignore_for_file: avoid_unnecessary_containers
 import 'package:flutter/material.dart';
 import 'package:mymali/core/widgets/form_helper/fields/chip_input_field.dart';
@@ -238,8 +239,8 @@ class UniversalFormField {
         );
       case UFFType.date:
         returningWidget = DateSelectorField(
-          label: 'Birth Date',
-          hint: 'Select date',
+          label: withTitle ? null : label,
+          hint: datePickerConfig.hintText ?? label,
           selectedDate: initialValue,
           onDateSelected: (date) => onChanged(date),
           validator: datePickerConfig.dateValidator,
@@ -248,8 +249,8 @@ class UniversalFormField {
         );
       case UFFType.time:
         returningWidget = TimeSelectorField(
-          label: 'Meeting Time',
-          hint: 'Select time',
+          label: withTitle ? null : label,
+          hint: timePickerConfig.hintText ?? label,
           selectedTime: initialValue,
           onTimeSelected: onChanged,
           validator: timePickerConfig.timeValidator,

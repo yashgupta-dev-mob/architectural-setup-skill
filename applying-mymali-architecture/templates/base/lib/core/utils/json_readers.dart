@@ -1,3 +1,4 @@
+// GENERIC: MyMali's json_readers.dart with neutral doc wording.
 /// Lenient readers for API JSON. A missing or mistyped value reads as null
 /// or empty, never a crash, so models can treat every field as optional.
 library;
@@ -7,7 +8,7 @@ double? asDouble(Object? value) => value is num ? value.toDouble() : null;
 int? asInt(Object? value) => value is num ? value.toInt() : null;
 
 /// A number that may arrive as a JSON number or a numeric string, as
-/// PostgREST sends a Postgres `numeric`. Anything else reads as null.
+/// some APIs send a decimal. Anything else reads as null.
 double? asNumeric(Object? value) {
   if (value is num) return value.toDouble();
   if (value is String) return double.tryParse(value.trim());

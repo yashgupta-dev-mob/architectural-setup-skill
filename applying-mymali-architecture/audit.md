@@ -64,7 +64,8 @@ and it survives.
 
 ## Not present
 - Things the app does not do (no cache here, no retry, no logging, no
-  analytics…). These stay absent.
+  analytics…). These stay absent, apart from what the architecture itself
+  adds: the debug-only request log of `NetworkingService`.
 
 ## Tests that must stay green
 - Each test file and what it asserts.

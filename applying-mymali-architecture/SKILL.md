@@ -33,6 +33,13 @@ does.
 | Start-up gains `Env.load()` and the installed services' `init()` | What the first screen is and what decides it |
 | Debug builds log each request (`CurlLoggerInterceptor`); release builds log nothing | The colour values, the `ThemeData` each mode builds, and the theme mode rule |
 | Colours move into `AppColors` / `AppTheme` | Navigation: where each action leads, push vs replace, back behaviour |
+| Network images go through `AppNetworkImage` (disk-cached); a whole-screen spinner becomes a `skeletonizer` skeleton of the same screen; app bars become `PageHeader` | Which data is shown, when, and from where |
+| Storage moves to MyMali's stores (`SecureStorage`, `LocalCache`, `PrefUtils`) | What is stored: every value moves over once from its old key, so no user loses it |
+
+These are the architecture, not optional extras: install and use them even
+when the old app looked or stored things differently. "It would change
+what users see" is not a reason to skip a kit component; it is a reason to
+keep the texts, colours and data identical inside it.
 
 The shared widgets take the app's colours from its theme, so the app keeps
 its palette with MyMali's components. Never add a restyle flag to a shared
@@ -90,6 +97,12 @@ Work in this order. Commit after each step.
 | Device copy is the truth, server gets a copy | `PrefUtils` + `pending` flag, same storage key and JSON shape |
 | Settings / flags | `PrefUtils`, same keys |
 | Token in SharedPreferences | `SecureStorage`; `AuthLocalDataSource` reads the old key once, moves it, deletes it |
+| A cache in SharedPreferences / a file / sqflite | `LocalCache`; the local data source reads the old entry once (old key, old shape, with its own `saved_at`), writes it to `LocalCache` and deletes it, so the first launch after the update still shows the saved copy |
+
+| Values already in `flutter_secure_storage` | `SecureStorage` with the same keys; `bootstrap()` sets `DeviceSecureStorage.installedKey` before `init()` whenever an old prefs key exists, or every updating user is signed out |
+
+**Every move from an old key is tested:** old value present → it is read,
+moved and deleted; absent → nothing happens.
 
 ## Behaviour that must survive the move
 
@@ -104,11 +117,15 @@ Work in this order. Commit after each step.
 | A header on every request | default headers (token) or one header getter in the data source, key from `Env` |
 | An interceptor (e.g. 401 → sign out) | the repository maps 401 to an `UnauthorizedFailure`; the bloc that got it reports `AuthSignedOutByServer` to `AuthBloc` — same trigger, same effect, nothing more |
 | A toast | a `SnackBar` with the same text, at the same moment (a toast is a passing note); the toast package goes |
-| A snackbar or dialog | the same text, shown per `AGENTS.md` section 22 |
+| A snackbar or a one-button dialog | the same text, shown per `AGENTS.md` section 22 |
+| A two-choice confirmation ("Cancel" / "Delete") | kept as it is, with both choices, and listed in `AGENTS.md` section 16 |
+| Headers other than `Content-Type: application/json` + `Bearer <token>` | `NetworkingService` without `secureStorage`, and the old headers passed per call or from the data source's header getter |
 | The server's error text shown to the user | the failure carries it; the failure-message helper returns it |
 | A hardcoded colour in a widget | an `AppColors` constant with the same value, read through an `AppTones` tone added for it (or the `ColorScheme` role whose value it already equals), so the theme itself does not change |
 | `Navigator.push` / `context.go` / a swapped `home` | `AppRoute` + `goNamed` / `pushNamed`, keeping push vs replace |
 | An analytics call | `AnalyticsService` + `AppEvents`, same name, properties and moment |
+| An analytics SDK of its own | one `AnalyticsService` implementation wrapping it (the only file importing the SDK); its methods map one to one (`identify` → the service's identify, `reset` → sign-out) |
+| `screen()` calls in `initState` | the same calls at the same moments; MyMali's router-based screen tracking only if it fires exactly the same names in the same order |
 
 ## Verify
 
@@ -135,6 +152,11 @@ Work in this order. Commit after each step.
 - "Change the key / text / colour, it's cleaner" → keep the value.
 - "MyMali has portrait lock / Firebase / Supabase, add it" → only what the
   app already had.
+- "Keep it in prefs / keep the AppBar / skip the skeleton so nothing
+  changes" → MyMali's store and kit, with the old values moved over and the
+  old texts inside.
+- "Only one host, so no `ApiHost`" / "trim the form helper to what we use"
+  → install the module whole; names exist even when there is one value.
 
 ## Common mistakes
 

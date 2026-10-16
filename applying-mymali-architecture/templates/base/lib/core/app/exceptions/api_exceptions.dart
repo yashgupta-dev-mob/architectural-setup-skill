@@ -1,11 +1,11 @@
-/// Typed exceptions thrown by remote data sources that call the app's
-/// Edge Functions or PostgREST. Repositories catch them and map them to
-/// failures; nothing above a repository ever sees them.
+// GENERIC: doc comments made neutral (no Edge Functions / PostgREST).
+/// Typed exceptions thrown by remote data sources that call the app's API.
+/// Repositories catch them and map them to failures; nothing above a
+/// repository ever sees them.
 library;
 
-/// The API answered with an error envelope: `{ "code", "status", "title",
-/// "detail" }` from an Edge Function, or `{ "code", "message", "details",
-/// "hint" }` from PostgREST.
+/// The API answered with an error: the code, HTTP status and detail read
+/// from the API's error body.
 class ServerException implements Exception {
   const ServerException({
     required this.code,

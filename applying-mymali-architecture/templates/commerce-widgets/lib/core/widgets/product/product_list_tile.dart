@@ -1,3 +1,4 @@
+// GENERIC: the price format and the stock / discount labels are optional parameters defaulting to MyMali's, so another app can pass its own.
 import 'package:flutter/material.dart';
 
 import '../../utils/currency_format.dart';
@@ -66,6 +67,10 @@ class ProductListTile extends StatelessWidget {
     this.actionIcon,
     this.actionKey,
     this.onAction,
+    this.formatPrice = formatRupees,
+    this.outOfStockLabel = 'Out of stock',
+    this.comingSoonLabel = 'Coming soon',
+    this.discountLabel,
   });
 
   final String testId;
@@ -75,7 +80,7 @@ class ProductListTile extends StatelessWidget {
   final String? caption;
   final String? imageUrl;
 
-  /// Selling price in rupees.
+  /// Selling price, shown through [formatPrice].
   final double price;
 
   /// Struck-through price, shown only when above [price].
@@ -116,7 +121,7 @@ class ProductListTile extends StatelessWidget {
   /// Shown as a chip under the title, e.g. "250 ml".
   final String? variantLabel;
 
-  /// Small muted line above the price, e.g. "₹99 × 2".
+  /// Small muted line above the price, e.g. "$99 × 2".
   final String? priceNote;
   final ProductListTileControl controlPlacement;
 
@@ -137,6 +142,18 @@ class ProductListTile extends StatelessWidget {
   final IconData? actionIcon;
   final Key? actionKey;
   final VoidCallback? onAction;
+
+  /// Formats [price] and [mrp]; defaults to rupees (`formatRupees`).
+  final String Function(num amount) formatPrice;
+
+  /// Shown on the disabled add pill when not [inStock].
+  final String outOfStockLabel;
+
+  /// The chip shown in place of the add control when [isComingSoon].
+  final String comingSoonLabel;
+
+  /// The discount ribbon's text for a percentage; defaults to "N% OFF".
+  final String Function(int percent)? discountLabel;
 
   /// Default side of the square thumbnail.
   static const double thumbnailSize = 92;
@@ -161,7 +178,7 @@ class ProductListTile extends StatelessWidget {
     final showMrp = mrp != null && mrp > price;
 
     final Widget control = isComingSoon
-        ? const InfoChip(label: 'Coming soon', tone: InfoChipTone.highlight)
+        ? InfoChip(label: comingSoonLabel, tone: InfoChipTone.highlight)
         : quantity > 0
         ? QuantityStepper(
             quantity: quantity,
@@ -175,7 +192,7 @@ class ProductListTile extends StatelessWidget {
           )
         : _AddButton(
             key: addKey ?? Key('${keyPrefix}_${testId}_add'),
-            label: inStock ? addLabel : 'Out of stock',
+            label: inStock ? addLabel : outOfStockLabel,
             icon: addIcon,
             tonal: tonalAdd,
             height: _controlHeight,
@@ -264,7 +281,7 @@ class ProductListTile extends StatelessWidget {
             textBaseline: TextBaseline.alphabetic,
             children: [
               Text(
-                formatRupees(price),
+                formatPrice(price),
                 maxLines: 1,
                 style: theme.textTheme.titleLarge?.copyWith(
                   color: colors.onSurface,
@@ -274,7 +291,7 @@ class ProductListTile extends StatelessWidget {
               if (showMrp) ...[
                 const SizedBox(width: 8),
                 Text(
-                  formatRupees(mrp),
+                  formatPrice(mrp),
                   maxLines: 1,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: colors.onSurfaceVariant,
@@ -347,6 +364,7 @@ class ProductListTile extends StatelessWidget {
                   imageUrl: imageUrl,
                   discountPercent: discountPercent,
                   size: imageSize,
+                  discountLabel: discountLabel,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -393,11 +411,13 @@ class _Thumbnail extends StatelessWidget {
     required this.imageUrl,
     required this.discountPercent,
     required this.size,
+    required this.discountLabel,
   });
 
   final String? imageUrl;
   final int discountPercent;
   final double size;
+  final String Function(int percent)? discountLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -425,7 +445,8 @@ class _Thumbnail extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(8, 1, 9, 1),
                     child: Text(
-                      '$discountPercent% OFF',
+                      discountLabel?.call(discountPercent) ??
+                          '$discountPercent% OFF',
                       maxLines: 1,
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: colors.onError,

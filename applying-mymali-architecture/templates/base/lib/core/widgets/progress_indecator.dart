@@ -1,7 +1,7 @@
-import 'dart:io';
-
-import 'package:flutter/material.dart';
+// GENERIC: defaultTargetPlatform instead of dart:io Platform, so it also works on the web.
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
 class ProgressIndecator extends StatelessWidget {
   final Color? color;
@@ -13,7 +13,7 @@ class ProgressIndecator extends StatelessWidget {
   Widget build(BuildContext context) {
     final effectiveColor = color ?? Theme.of(context).colorScheme.primary;
 
-    return Platform.isIOS
+    return defaultTargetPlatform == TargetPlatform.iOS
         ? Center(
             child: CupertinoActivityIndicator(
               animating: true,

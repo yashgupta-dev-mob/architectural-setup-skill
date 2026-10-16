@@ -1,7 +1,7 @@
+// GENERIC: literal event names instead of MyMali's AppEvents; no purchase test (the template's purchase table is empty).
 import 'package:facebook_app_events/facebook_app_events.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mymali/core/services/analytics/app_events.dart';
 import 'package:mymali/core/services/analytics/meta_analytics_destination.dart';
 
 void main() {
@@ -24,32 +24,15 @@ void main() {
 
   Future<void> settle() => Future<void>.delayed(Duration.zero);
 
-  test('Order Placed is one logPurchase and no logEvent', () async {
-    meta.log(AppEvents.orderPlaced, {
-      'order_id': 'KMM-9',
-      'value': 899,
-      'currency': 'INR',
-    });
+  test('an event is one logEvent with its name and value', () async {
+    meta.log('Checkout Started', {'value': 350, 'items_count': 2});
     await settle();
 
-    expect(calls.map((c) => c.method), ['logPurchase']);
+    expect(calls.map((c) => c.method), ['logEvent']);
     final arguments = calls.single.arguments as Map;
-    expect(arguments['amount'], 899.0);
-    expect(arguments['currency'], 'INR');
+    expect(arguments['name'], 'Checkout Started');
+    expect(arguments['_valueToSum'], 350.0);
   });
-
-  test(
-    'another event is a logEvent with its standard name and value',
-    () async {
-      meta.log(AppEvents.checkoutStarted, {'value': 350, 'items_count': 2});
-      await settle();
-
-      expect(calls.map((c) => c.method), ['logEvent']);
-      final arguments = calls.single.arguments as Map;
-      expect(arguments['name'], 'fb_mobile_initiated_checkout');
-      expect(arguments['_valueToSum'], 350.0);
-    },
-  );
 
   test('the user id is set, and cleared with null', () async {
     meta
@@ -67,7 +50,7 @@ void main() {
           (call) async => throw PlatformException(code: 'nope'),
         );
 
-    meta.log(AppEvents.otpSent, null);
+    meta.log('OTP Sent', null);
     await settle();
   });
 }

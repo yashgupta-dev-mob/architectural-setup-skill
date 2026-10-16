@@ -1,3 +1,4 @@
+// GENERIC: DatePickerConfig and TimePickerConfig take an optional hintText.
 // ignore_for_file: constant_identifier_names
 import 'dart:async';
 
@@ -163,10 +164,14 @@ class DatePickerConfig {
   final String? Function(DateTime?)? dateValidator;
   final bool showClearButton;
   final bool enabled;
+
+  /// Shown while no date is picked; defaults to the field's label.
+  final String? hintText;
   const DatePickerConfig({
     this.dateValidator,
     this.showClearButton = false,
     this.enabled = true,
+    this.hintText,
   });
 }
 
@@ -175,11 +180,15 @@ class TimePickerConfig {
   final bool showClearButton;
   final bool enabled;
   final bool use24HourFormat;
+
+  /// Shown while no time is picked; defaults to the field's label.
+  final String? hintText;
   const TimePickerConfig({
     this.timeValidator,
     this.showClearButton = false,
     this.enabled = true,
     this.use24HourFormat = false,
+    this.hintText,
   });
 }
 

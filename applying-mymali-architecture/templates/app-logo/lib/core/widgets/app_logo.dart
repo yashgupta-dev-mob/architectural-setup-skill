@@ -1,16 +1,17 @@
+// GENERIC: semanticLabel defaults to null instead of MyMali's name.
 import 'package:flutter/material.dart';
 
 import '../assets/app_assets.dart';
 
 /// A bundled brand image, decoded at the size it is drawn at: the app
-/// logo by default, or another [AppAssets] mark such as the Mali coin.
+/// logo by default, or another [AppAssets] mark.
 class AppLogo extends StatelessWidget {
   const AppLogo({
     super.key,
     required this.size,
     this.color,
     this.asset = AppAssets.icon,
-    this.semanticLabel = 'My Mali',
+    this.semanticLabel,
   });
 
   final double size;
@@ -21,8 +22,8 @@ class AppLogo extends StatelessWidget {
   /// Which image to show, from [AppAssets].
   final String asset;
 
-  /// What a screen reader says for the image.
-  final String semanticLabel;
+  /// What a screen reader says for the image; null gives it no label.
+  final String? semanticLabel;
 
   @override
   Widget build(BuildContext context) {

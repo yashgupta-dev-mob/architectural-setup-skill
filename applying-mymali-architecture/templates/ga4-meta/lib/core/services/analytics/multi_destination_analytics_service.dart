@@ -1,3 +1,4 @@
+// GENERIC: the plain events it sends are named in this file, not in MyMali's AppEvents; works without Katyayani Core (NoOpAnalyticsService).
 // ignore_for_file: prefer_initializing_formals
 import 'package:flutter/widgets.dart';
 
@@ -5,32 +6,40 @@ import 'analytics_destination.dart';
 import 'analytics_item.dart';
 import 'analytics_service.dart';
 import 'analytics_event_mapper.dart';
-import 'app_events.dart';
 
-/// The one [AnalyticsService] the app uses: every event goes to Katyayani
-/// Core ([_core]) and to each [AnalyticsDestination] (Google Analytics 4 and
+/// The one [AnalyticsService] the app uses: every event goes to the core
+/// service ([_core]: Katyayani Core's, or `NoOpAnalyticsService` for an app
+/// without it) and to each [AnalyticsDestination] (Google Analytics 4 and
 /// Meta), so no screen or bloc ever calls an SDK.
 ///
 /// `track` sends the event under its app name to every destination, and each
 /// destination shapes the name and parameters its own way
 /// (`analytics_event_mapper.dart`).
 ///
-/// The typed calls (`addToCart`, `viewItem`, …) are Katyayani Core's
-/// ecommerce events, with its item lists. Only three of them also have a
-/// plain event the other destinations need and nothing else sends:
-/// `addToCart` ("Added To Cart"), `removeFromCart` ("Removed From Cart") and
-/// `search` ("Product Search"). The rest (`viewItem`, `viewCart`,
-/// `beginCheckout`, `addPaymentInfo`, `purchase`, `login`, `screenView`) are
-/// always sent beside a `track` of the same moment ("Product View", "Cart
-/// Visit", "Checkout Started", "Payment Started", "Order Placed", "Login",
-/// "Screen Load"), so they stay with Katyayani Core: forwarding them too
-/// would count the moment twice.
+/// The typed calls (`addToCart`, `viewItem`, …) are the core's ecommerce
+/// events, with its item lists. Only three of them also have a plain event
+/// the other destinations need and nothing else sends: `addToCart`
+/// ([addToCartEvent]), `removeFromCart` ([removeFromCartEvent]) and `search`
+/// ([searchEvent]). The rest (`viewItem`, `viewCart`, `beginCheckout`,
+/// `addPaymentInfo`, `purchase`, `login`, `screenView`) are expected to be
+/// sent beside a `track` of the same moment, so they stay with the core:
+/// forwarding them too would count the moment twice.
 class MultiDestinationAnalyticsService implements AnalyticsService {
   const MultiDestinationAnalyticsService({
     required AnalyticsService core,
     required List<AnalyticsDestination> destinations,
   }) : _core = core,
        _destinations = destinations;
+
+  /// The plain event [addToCart] sends to the destinations. An app that
+  /// already reports this moment under another name uses that name here.
+  static const String addToCartEvent = 'Added To Cart';
+
+  /// The plain event [removeFromCart] sends to the destinations.
+  static const String removeFromCartEvent = 'Removed From Cart';
+
+  /// The plain event [search] sends to the destinations.
+  static const String searchEvent = 'Product Search';
 
   final AnalyticsService _core;
   final List<AnalyticsDestination> _destinations;
@@ -52,13 +61,13 @@ class MultiDestinationAnalyticsService implements AnalyticsService {
   @override
   void addToCart({required List<AnalyticsItem> items, num? value}) {
     _core.addToCart(items: items, value: value);
-    _send(AppEvents.addToCart, _itemProperties(items));
+    _send(addToCartEvent, _itemProperties(items));
   }
 
   @override
   void removeFromCart({required List<AnalyticsItem> items, num? value}) {
     _core.removeFromCart(items: items, value: value);
-    _send(AppEvents.removeFromCart, _itemProperties(items));
+    _send(removeFromCartEvent, _itemProperties(items));
   }
 
   @override
@@ -90,7 +99,7 @@ class MultiDestinationAnalyticsService implements AnalyticsService {
   @override
   void search(String searchTerm) {
     _core.search(searchTerm);
-    _send(AppEvents.productSearch, {'search_term': searchTerm});
+    _send(searchEvent, {'search_term': searchTerm});
   }
 
   @override

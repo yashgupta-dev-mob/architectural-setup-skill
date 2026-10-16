@@ -116,8 +116,10 @@ class AppRouter {
 ```
 An app that swapped its home widget in place (no route change) keeps that
 feel: a redirect to the same two locations replaces the page without a back
-stack. An app with bottom tabs uses `StatefulShellRoute.indexedStack`, one
-branch and navigator key per tab, as MyMali does.
+stack. An app with bottom tabs whose tabs kept their state uses
+`StatefulShellRoute.indexedStack` (one
+branch and navigator key per tab, as MyMali does); tabs that were rebuilt
+on every switch use a plain `ShellRoute`.
 
 ## `lib/core/di/injection_container.dart`
 ```dart

@@ -1,7 +1,8 @@
-/// A third-party place events are sent to besides Katyayani Core (Google
-/// Analytics 4, Meta). Each one wraps one SDK and is the only file that
-/// imports it. Every method is safe to call when the SDK is not running: it
-/// then does nothing, and never throws.
+// GENERIC: doc comments made neutral (no Katyayani Core / MyMali names).
+/// A third-party place events are sent to besides the app's core analytics
+/// service (e.g. Google Analytics 4, Meta). Each one wraps one SDK and is the
+/// only file that imports it. Every method is safe to call when the SDK is
+/// not running: it then does nothing, and never throws.
 abstract interface class AnalyticsDestination {
   /// Sends one event by its app name (an `AppEvents` value); the destination
   /// shapes the name and the parameters its own way.

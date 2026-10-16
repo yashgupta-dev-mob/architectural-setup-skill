@@ -1,3 +1,4 @@
+// GENERIC: neutral sample text.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mymali/core/theme/app_theme.dart';
@@ -29,7 +30,7 @@ void main() {
   testWidgets('padding is configurable', (tester) async {
     await pumpLabel(
       tester,
-      const SectionLabel(title: 'Coin history', padding: EdgeInsets.zero),
+      const SectionLabel(title: 'Recent activity', padding: EdgeInsets.zero),
     );
 
     final padding = tester.widget<Padding>(

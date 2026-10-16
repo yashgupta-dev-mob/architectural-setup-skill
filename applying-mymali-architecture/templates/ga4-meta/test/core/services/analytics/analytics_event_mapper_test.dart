@@ -1,32 +1,15 @@
+// GENERIC: tests the generic rules with literal names; MyMali's special-name tables are empty in the template.
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mymali/core/services/analytics/analytics_event_mapper.dart';
-import 'package:mymali/core/services/analytics/app_events.dart';
 
 void main() {
   group('GA4 names', () {
-    test('the recommended events use GA4 own names', () {
-      expect(ga4NameFor(AppEvents.addToCart), 'add_to_cart');
-      expect(ga4NameFor(AppEvents.removeFromCart), 'remove_from_cart');
-      expect(ga4NameFor(AppEvents.addToFavorite), 'add_to_wishlist');
-      expect(ga4NameFor(AppEvents.productView), 'view_item');
-      expect(ga4NameFor(AppEvents.productSearch), 'search');
-      expect(ga4NameFor(AppEvents.checkoutStarted), 'begin_checkout');
-      expect(ga4NameFor(AppEvents.paymentStarted), 'add_payment_info');
-      expect(ga4NameFor(AppEvents.orderPlaced), 'purchase');
-      expect(ga4NameFor(AppEvents.orderRated), 'order_rated');
-    });
-
-    test('Login and Verified keep apart: Verified is the GA4 login', () {
-      expect(ga4NameFor(AppEvents.verified), 'login');
-      expect(ga4NameFor(AppEvents.login), 'login_completed');
-      expect(ga4NameFor(AppEvents.loginStarted), 'login_started');
-    });
-
-    test('any other name is lowercase snake_case', () {
+    test('a name is lowercase snake_case', () {
       expect(ga4NameFor('Nav Bar Icon Tapped'), 'nav_bar_icon_tapped');
       expect(ga4NameFor('OTP Sent'), 'otp_sent');
       expect(ga4NameFor('Screen Load'), 'screen_load');
-      expect(ga4NameFor('Garden Waitlist Joined'), 'garden_waitlist_joined');
+      expect(ga4NameFor('Added To Cart'), 'added_to_cart');
+      expect(ga4NameFor('itemViewed'), 'item_viewed');
     });
 
     test('a name is cut to 40 characters', () {
@@ -40,12 +23,13 @@ void main() {
     test('keys are snake_case, nulls and unsupported values are dropped', () {
       final event = ga4EventFor('Edit', {
         'itemId': 'p1',
-        'Search Term': 'neem',
+        'Search Term': 'mug',
         'skipped': null,
         'map': {'a': 1},
       });
 
-      expect(event.parameters, {'item_id': 'p1', 'search_term': 'neem'});
+      expect(event.name, 'edit');
+      expect(event.parameters, {'item_id': 'p1', 'search_term': 'mug'});
     });
 
     test('text is cut to 100 characters', () {
@@ -68,12 +52,13 @@ void main() {
       });
     });
 
-    test('value or amount also goes as value and currency, INR by default', () {
-      final withValue = ga4EventFor(AppEvents.cartVisit, {'value': 499});
+    test('value or amount also goes as value and currency, the default '
+        'currency when none is named', () {
+      final withValue = ga4EventFor('Cart Visit', {'value': 499});
       expect(withValue.parameters['value'], 499.0);
-      expect(withValue.parameters['currency'], 'INR');
+      expect(withValue.parameters['currency'], defaultCurrency);
 
-      final withAmount = ga4EventFor(AppEvents.paymentCancelled, {
+      final withAmount = ga4EventFor('Payment Cancelled', {
         'amount': 120,
         'currency': 'USD',
       });
@@ -82,70 +67,36 @@ void main() {
     });
 
     test('an event with no money gets no value or currency', () {
-      final event = ga4EventFor(AppEvents.otpSent, {'channel': 'sms'});
+      final event = ga4EventFor('OTP Sent', {'channel': 'sms'});
 
       expect(event.parameters, {'channel': 'sms'});
     });
 
     test('no properties at all is an empty map', () {
-      expect(ga4EventFor(AppEvents.logout, null).parameters, isEmpty);
+      expect(ga4EventFor('Logout', null).parameters, isEmpty);
     });
   });
 
-  group('Meta names', () {
-    test('the standard events use Meta names', () {
-      expect(
-        metaEventFor(AppEvents.verified, null).name,
-        'fb_mobile_complete_registration',
-      );
-      expect(
-        metaEventFor(AppEvents.addToCart, null).name,
-        'fb_mobile_add_to_cart',
-      );
-      expect(
-        metaEventFor(AppEvents.addToFavorite, null).name,
-        'fb_mobile_add_to_wishlist',
-      );
-      expect(
-        metaEventFor(AppEvents.productView, null).name,
-        'fb_mobile_content_view',
-      );
-      expect(
-        metaEventFor(AppEvents.productSearch, null).name,
-        'fb_mobile_search',
-      );
-      expect(
-        metaEventFor(AppEvents.checkoutStarted, null).name,
-        'fb_mobile_initiated_checkout',
-      );
-      expect(
-        metaEventFor(AppEvents.paymentStarted, null).name,
-        'fb_mobile_add_payment_info',
-      );
-      expect(metaEventFor(AppEvents.orderRated, null).name, 'fb_mobile_rate');
+  group('Meta', () {
+    test('an event keeps its name as written', () {
+      expect(metaEventFor('OTP Sent', null).name, 'OTP Sent');
+      expect(metaEventFor('Login', null).name, 'Login');
     });
 
-    test('any other event keeps the name as written', () {
-      expect(metaEventFor(AppEvents.otpSent, null).name, 'OTP Sent');
-      expect(metaEventFor(AppEvents.login, null).name, 'Login');
-    });
-  });
-
-  group('Meta parameters', () {
     test('money is valueToSum, with fb_currency, never a _valueToSum key', () {
-      final event = metaEventFor(AppEvents.checkoutStarted, {
+      final event = metaEventFor('Checkout Started', {
         'value': 350,
         'items_count': 2,
       });
 
       expect(event.valueToSum, 350.0);
-      expect(event.parameters['fb_currency'], 'INR');
+      expect(event.parameters['fb_currency'], defaultCurrency);
       expect(event.parameters.containsKey('_valueToSum'), isFalse);
       expect(event.isPurchase, isFalse);
     });
 
     test('an item id also becomes the content id of a product', () {
-      final event = metaEventFor(AppEvents.addToCart, {
+      final event = metaEventFor('Added To Cart', {
         'item_id': 'sku-1',
         'price': 99,
         'quantity': 2,
@@ -156,61 +107,14 @@ void main() {
       expect(event.parameters['price'], 99);
     });
 
-    test('a search carries the search string', () {
-      final event = metaEventFor(AppEvents.productSearch, {
-        'search_term': 'neem oil',
-      });
+    test('a search term is also the search string', () {
+      final event = metaEventFor('Product Search', {'search_term': 'mug'});
 
-      expect(event.parameters['fb_search_string'], 'neem oil');
-    });
-
-    test('a rating is the value to sum, out of 5, for an order', () {
-      final event = metaEventFor(AppEvents.orderRated, {
-        'order_id': 'KMM-1',
-        'rating': 4,
-      });
-
-      expect(event.valueToSum, 4.0);
-      expect(event.parameters['fb_max_rating_value'], 5);
-      expect(event.parameters['fb_content_type'], 'order');
-    });
-
-    test('Payment Started is a success', () {
-      final event = metaEventFor(AppEvents.paymentStarted, {
-        'value': 200,
-        'method': 'online',
-      });
-
-      expect(event.parameters['fb_success'], 1);
-      expect(event.valueToSum, 200.0);
-    });
-
-    test('Order Placed is a purchase with its revenue, under its own name', () {
-      final event = metaEventFor(AppEvents.orderPlaced, {
-        'order_id': 'KMM-9',
-        'value': 899,
-        'items_count': 3,
-        'currency': 'INR',
-      });
-
-      expect(event.isPurchase, isTrue);
-      expect(event.valueToSum, 899.0);
-      expect(event.currency, 'INR');
-      expect(event.parameters['order_id'], 'KMM-9');
-    });
-
-    test('a purchase with no value is logged with zero', () {
-      expect(
-        metaEventFor(AppEvents.orderPlaced, {'order_id': 'x'}).valueToSum,
-        0,
-      );
+      expect(event.parameters['fb_search_string'], 'mug');
     });
 
     test('an event with no money has no value to sum', () {
-      expect(
-        metaEventFor(AppEvents.otpSent, {'channel': 'sms'}).valueToSum,
-        null,
-      );
+      expect(metaEventFor('OTP Sent', {'channel': 'sms'}).valueToSum, null);
     });
   });
 }

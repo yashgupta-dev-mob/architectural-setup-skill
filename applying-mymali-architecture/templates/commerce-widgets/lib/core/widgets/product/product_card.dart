@@ -1,3 +1,4 @@
+// GENERIC: the price format and every label (MRP, stock, sold, % OFF) are optional parameters defaulting to MyMali's, so another app can pass its own.
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -38,6 +39,14 @@ class ProductCard extends StatelessWidget {
     this.onIncrement,
     this.onDecrement,
     this.onWishlistPressed,
+    this.formatPrice = formatRupees,
+    this.mrpLabel = 'MRP',
+    this.inStockLabel = 'In Stock',
+    this.lowStockLabel = 'Few left',
+    this.outOfStockLabel = 'Out of stock',
+    this.comingSoonLabel = 'Coming soon',
+    this.soldLabel,
+    this.discountLabel,
   });
 
   final String testId;
@@ -45,10 +54,10 @@ class ProductCard extends StatelessWidget {
   final String? subtitle;
   final String? imageUrl;
 
-  /// Selling price in rupees.
+  /// Selling price, shown through [formatPrice].
   final double price;
 
-  /// Struck-through "MRP" price, shown only when above [price].
+  /// Struck-through [mrpLabel] price, shown only when above [price].
   final double? mrp;
   final int discountPercent;
   final int? soldCount;
@@ -67,6 +76,24 @@ class ProductCard extends StatelessWidget {
   final VoidCallback? onIncrement;
   final VoidCallback? onDecrement;
   final VoidCallback? onWishlistPressed;
+
+  /// Formats [price] and [mrp]; defaults to rupees (`formatRupees`).
+  final String Function(num amount) formatPrice;
+
+  /// The word before the struck-through [mrp].
+  final String mrpLabel;
+
+  /// The stock chip's text in each state.
+  final String inStockLabel;
+  final String lowStockLabel;
+  final String outOfStockLabel;
+  final String comingSoonLabel;
+
+  /// The sold badge's text for a count; defaults to "N sold".
+  final String Function(int count)? soldLabel;
+
+  /// The discount badge's text for a percentage; defaults to "N% OFF".
+  final String Function(int percent)? discountLabel;
 
   /// Height the card needs below its square image: the details block at
   /// its fullest (subtitle, variant chip, stock chip, price with MRP), in
@@ -151,6 +178,8 @@ class ProductCard extends StatelessWidget {
                     child: _ImageBadges(
                       discountPercent: discountPercent,
                       soldCount: soldCount,
+                      soldLabel: soldLabel,
+                      discountLabel: discountLabel,
                     ),
                   ),
                 ],
@@ -194,6 +223,10 @@ class ProductCard extends StatelessWidget {
                         inStock: inStock,
                         isLowStock: isLowStock,
                         isComingSoon: isComingSoon,
+                        inStockLabel: inStockLabel,
+                        lowStockLabel: lowStockLabel,
+                        outOfStockLabel: outOfStockLabel,
+                        comingSoonLabel: comingSoonLabel,
                       ),
                     ),
                     // const Spacer(),
@@ -235,6 +268,8 @@ class ProductCard extends StatelessWidget {
                                 child: _PriceBlock(
                                   price: price,
                                   mrp: showMrp ? mrp : null,
+                                  formatPrice: formatPrice,
+                                  mrpLabel: mrpLabel,
                                 ),
                               ),
                             ),
@@ -261,10 +296,17 @@ class ProductCard extends StatelessWidget {
 /// image's foot. When both don't fit, the row scales down as one, so
 /// neither label is cut off.
 class _ImageBadges extends StatelessWidget {
-  const _ImageBadges({required this.discountPercent, required this.soldCount});
+  const _ImageBadges({
+    required this.discountPercent,
+    required this.soldCount,
+    required this.soldLabel,
+    required this.discountLabel,
+  });
 
   final int discountPercent;
   final int? soldCount;
+  final String Function(int count)? soldLabel;
+  final String Function(int percent)? discountLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -286,7 +328,9 @@ class _ImageBadges extends StatelessWidget {
             children: [
               if (showDiscount)
                 InfoChip(
-                  label: '$discountPercent% OFF',
+                  label:
+                      discountLabel?.call(discountPercent) ??
+                      '$discountPercent% OFF',
                   tone: InfoChipTone.highlight,
                 )
               else
@@ -294,7 +338,7 @@ class _ImageBadges extends StatelessWidget {
               const SizedBox(width: 6),
               if (showSold)
                 InfoChip(
-                  label: '$soldCount sold',
+                  label: soldLabel?.call(soldCount) ?? '$soldCount sold',
                   icon: Icons.shopping_bag_outlined,
                   tone: InfoChipTone.dark,
                 ),
@@ -307,7 +351,15 @@ class _ImageBadges extends StatelessWidget {
 }
 
 class _PriceBlock extends StatelessWidget {
-  const _PriceBlock({required this.price, required this.mrp});
+  const _PriceBlock({
+    required this.price,
+    required this.mrp,
+    required this.formatPrice,
+    required this.mrpLabel,
+  });
+
+  final String Function(num amount) formatPrice;
+  final String mrpLabel;
 
   final double price;
 
@@ -324,7 +376,7 @@ class _PriceBlock extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          formatRupees(price),
+          formatPrice(price),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: theme.textTheme.titleLarge?.copyWith(
@@ -334,7 +386,7 @@ class _PriceBlock extends StatelessWidget {
         ),
         if (mrp != null)
           Text(
-            'MRP ${formatRupees(mrp!)}',
+            '$mrpLabel ${formatPrice(mrp!)}',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: theme.textTheme.bodySmall?.copyWith(
@@ -352,23 +404,31 @@ class _StockChip extends StatelessWidget {
     required this.inStock,
     required this.isLowStock,
     required this.isComingSoon,
+    required this.inStockLabel,
+    required this.lowStockLabel,
+    required this.outOfStockLabel,
+    required this.comingSoonLabel,
   });
 
   final bool inStock;
   final bool isLowStock;
   final bool isComingSoon;
+  final String inStockLabel;
+  final String lowStockLabel;
+  final String outOfStockLabel;
+  final String comingSoonLabel;
 
   @override
   Widget build(BuildContext context) {
     if (isComingSoon) {
-      return const InfoChip(label: 'Coming soon', tone: InfoChipTone.highlight);
+      return InfoChip(label: comingSoonLabel, tone: InfoChipTone.highlight);
     }
     if (!inStock) {
-      return const InfoChip(label: 'Out of stock', tone: InfoChipTone.dark);
+      return InfoChip(label: outOfStockLabel, tone: InfoChipTone.dark);
     }
     if (isLowStock) {
-      return const InfoChip(label: 'Few left', tone: InfoChipTone.highlight);
+      return InfoChip(label: lowStockLabel, tone: InfoChipTone.highlight);
     }
-    return const InfoChip(label: 'In Stock', tone: InfoChipTone.accent);
+    return InfoChip(label: inStockLabel, tone: InfoChipTone.accent);
   }
 }

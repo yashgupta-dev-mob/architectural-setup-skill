@@ -84,7 +84,8 @@ copy app-logo $W/app_logo.dart
 copy analytics \
   lib/core/services/analytics/analytics_service.dart \
   lib/core/services/analytics/analytics_item.dart \
-  lib/core/services/analytics/analytics_destination.dart
+  lib/core/services/analytics/analytics_destination.dart \
+  lib/core/services/analytics/no_op_analytics_service.dart
 
 copy katyayani-core \
   lib/core/services/katyayani_core/ko_engagement_service.dart \
@@ -95,7 +96,6 @@ copy katyayani-core \
   lib/core/services/local_notifications/local_notification_service_impl.dart \
   test/core/services/katyayani_core/kc_identity_test.dart \
   test/core/services/analytics/ko_analytics_service_test.dart \
-  test/core/services/analytics/multi_destination_analytics_service_test.dart \
   test/helpers/fake_ko_engagement_service.dart
 
 copy ga4-meta \
@@ -105,7 +105,8 @@ copy ga4-meta \
   lib/core/services/analytics/meta_analytics_destination.dart \
   lib/core/services/analytics/app_events.dart \
   test/core/services/analytics/meta_analytics_destination_test.dart \
-  test/core/services/analytics/analytics_event_mapper_test.dart
+  test/core/services/analytics/analytics_event_mapper_test.dart \
+  test/core/services/analytics/multi_destination_analytics_service_test.dart
 
 copy commerce-widgets \
   $W/product/product_card.dart $W/product/product_list_tile.dart \

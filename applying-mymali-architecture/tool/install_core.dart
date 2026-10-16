@@ -125,13 +125,15 @@ void main(List<String> args) {
     _fail('No pubspec.yaml in ${project.absolute.path}');
   }
   final name = RegExp(
-    r'^name:\s*(\S+)',
+    r'''^name:\s*["']?([A-Za-z0-9_]+)["']?''',
     multiLine: true,
   ).firstMatch(pubspec.readAsStringSync())?.group(1);
   if (name == null) _fail('Cannot read the package name from pubspec.yaml');
 
-  final wanted = {'base', ...?options['modules']?.split(',')}
-    ..removeWhere((m) => m.trim().isEmpty);
+  final wanted = {
+    'base',
+    ...?options['modules']?.split(',').map((m) => m.trim()),
+  }..removeWhere((m) => m.isEmpty);
   for (final m in wanted) {
     if (!modules.containsKey(m)) _fail('Unknown module "$m". Try --list.');
   }
@@ -167,6 +169,8 @@ void main(List<String> args) {
     final dir = Directory('${templates.path}/$m');
     for (final f in dir.listSync(recursive: true).whereType<File>()) {
       final rel = f.path.substring(dir.path.length + 1).replaceAll(r'\', '/');
+      // Skip .DS_Store and other dotfiles a copy of the skill may carry.
+      if (rel.split('/').any((part) => part.startsWith('.'))) continue;
       planned[rel] = f;
     }
   }
@@ -189,11 +193,17 @@ void main(List<String> args) {
 
   // The rulebook, trimmed to the installed modules.
   final rules = _rulesFor(
-    File('${skillDir.path}/rules/AGENTS.md').readAsStringSync(),
+    File('${skillDir.path}/rules/AGENTS.md')
+        .readAsStringSync()
+        .replaceAll('\r\n', '\n'),
     ordered.toSet(),
   );
   final agents = File('${project.path}/AGENTS.md');
-  final rulesPath = agents.existsSync() && !force
+  // A rulebook this installer wrote before may be replaced; the app's own
+  // rules never are.
+  final ours =
+      agents.existsSync() && agents.readAsStringSync().startsWith(_rulesTitle);
+  final rulesPath = agents.existsSync() && !ours && !force
       ? 'AGENTS.mymali.md'
       : 'AGENTS.md';
   final claude = File('${project.path}/CLAUDE.md');
@@ -202,8 +212,9 @@ void main(List<String> args) {
     if (!claude.existsSync()) claude.writeAsStringSync('@AGENTS.md\n');
   }
   written.add(rulesPath);
-  if (rulesPath != 'AGENTS.md')
+  if (rulesPath != 'AGENTS.md') {
     conflicts.add('AGENTS.md (rules written to $rulesPath: merge them)');
+  }
   if (claude.existsSync() &&
       !claude.readAsStringSync().contains('@AGENTS.md')) {
     conflicts.add('CLAUDE.md (add a line "@AGENTS.md")');
@@ -228,15 +239,29 @@ void main(List<String> args) {
     ..writeln('\nAdd the packages (only those the project lacks):')
     ..writeln('  flutter pub add ${packages.join(' ')}')
     ..writeln(
-      '\nThen fill in the per-app files marked "per app" in SKILL.md: '
-      'env.dart, endpoints.dart, base_api_repository.dart, app_colors.dart, '
-      'app_theme.dart, app_assets.dart.',
+      '\nThen fill in the per-app files (SKILL.md step 3): env.dart (+ .env, '
+      '.env.example), endpoints.dart, base_api_repository.dart (timeouts), '
+      'app_colors.dart, app_theme.dart, app_assets.dart, '
+      'injection_container.dart, and write bootstrap.dart, app.dart, '
+      'app_routes.dart, app_router.dart, navigator_keys.dart.',
     );
+  if (hosts.length > 1) {
+    stdout.writeln(
+      'Each extra host needs its base URL before the project compiles: '
+      '${hosts.skip(1).map((h) => 'Endpoints.${h}BaseUrl').join(', ')} '
+      '(from an Env getter).',
+    );
+  }
 }
+
+/// The first line of rules/AGENTS.md, used to recognise our own rulebook.
+const String _rulesTitle = '# Rules for AI agents and developers';
 
 /// Rewrites a template for the target project.
 String _adapt(String text, String package, List<String> hosts) {
-  var out = text.replaceAll('package:mymali/', 'package:$package/');
+  // Templates may have been checked out with CRLF; the patterns expect LF.
+  var out = text.replaceAll('\r\n', '\n');
+  out = out.replaceAll('package:mymali/', 'package:$package/');
   // The marker line is for the skill's maintainers only.
   out = out.replaceFirst(RegExp(r'^// GENERIC:[^\n]*\n'), '');
   out = out.replaceAll(
