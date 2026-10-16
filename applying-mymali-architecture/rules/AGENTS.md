@@ -377,8 +377,10 @@ second client.
   | Blocs | `registerFactory` |
 
 - Blocs receive **use cases**, never repositories or data sources.
-- Only composition code calls `sl<…>()`: `injection_container.dart`, and
-  the `create:` of `BlocProvider`s in `app.dart` and pages.
+- Only composition code calls `sl<…>()`: `injection_container.dart`,
+  `bootstrap.dart` (as MyMali's does, e.g. to hand one `AuthBloc` to both
+  `App` and `AppRouter`), and the `create:` of `BlocProvider`s in `app.dart`
+  and pages.
 
 ---
 
@@ -394,7 +396,9 @@ second client.
   `FocusNode` or `GoRouter`, navigate, show dialogs or snackbars, or call
   data sources or repositories directly.
 - **Navigation and feedback happen in the UI**, in `BlocListener`s with a
-  precise `listenWhen` (section 22 says which kind of feedback).
+  precise `listenWhen` (section 22 says which kind of feedback). A one-shot
+  outcome for a listener (a message to show) carries a counter or id that
+  changes every time, so two equal outcomes in a row both reach the UI.
 - **Scope:** a screen bloc owns that screen's form and flow; an app-wide
   bloc (provided in `app.dart`) owns cross-screen state such as
   `AuthBloc`. Screens report to app-wide blocs through events.

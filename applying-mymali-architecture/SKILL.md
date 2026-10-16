@@ -41,8 +41,13 @@ when the old app looked or stored things differently. "It would change
 what users see" is not a reason to skip a kit component; it is a reason to
 keep the texts, colours and data identical inside it.
 
-The shared widgets take the app's colours from its theme, so the app keeps
-its palette with MyMali's components. Never add a restyle flag to a shared
+The shared widgets take their colours from the app's `ColorScheme`, as
+its unchanged `ThemeData` produces it. Where the old widgets hardcoded a
+colour that the scheme does not hold (with Material 3, `primarySwatch` is
+ignored, so `colorScheme.primary` is Flutter's default), a kit component
+shows the scheme's colour instead: list each such case in
+`MIGRATION_NOTES.md` so the owner can decide; do not change the theme to
+compensate. Never add a restyle flag to a shared
 widget to imitate an old widget's look.
 
 ## The procedure

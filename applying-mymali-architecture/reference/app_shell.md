@@ -14,8 +14,9 @@ void main() {
 
 ## `lib/app/bootstrap.dart`
 Everything the old `main()` awaited before `runApp`, in the same order,
-plus `Env.load()` and `configureDependencies()`. Add nothing the app did
-not wait for (MyMali's portrait lock, Firebase, Supabase are MyMali's own).
+plus what the architecture needs: `Env.load()`, the `init()` of each
+installed storage module, and `configureDependencies()`. Add nothing else
+(MyMali's portrait lock, Firebase, Supabase are MyMali's own).
 ```dart
 Future<void> bootstrap() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,7 +26,11 @@ Future<void> bootstrap() async {
   // await DeviceSecureStorage.init();    // secure-storage module
   // await HiveLocalCache.init();         // local-cache module
   configureDependencies();
-  runApp(App(router: AppRouter().router));
+  // One AuthBloc for the app and the router redirect (composition code).
+  final authBloc = sl<AuthBloc>()..add(AuthStatusRequested());
+  runApp(
+    App(authBloc: authBloc, router: AppRouter(authBloc: authBloc).router),
+  );
 }
 ```
 If the old app awaited nothing before its first frame and its first screen
@@ -35,18 +40,20 @@ timing: read it in the bloc's start event, not in `bootstrap()`.
 ## `lib/app/app.dart`
 ```dart
 class App extends StatelessWidget {
-  const App({super.key, required this.router});
+  const App({super.key, required this.router, required this.authBloc});
 
   final GoRouter router;
+
+  /// The one app-wide AuthBloc, also given to [AppRouter].
+  final AuthBloc authBloc;
 
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
         // App-wide blocs only; screen blocs are provided by their pages.
-        BlocProvider<AuthBloc>(
-          create: (_) => sl<AuthBloc>()..add(AuthStatusRequested()),
-        ),
+        // Created in bootstrap(), because the router's redirect needs it too.
+        BlocProvider<AuthBloc>.value(value: authBloc),
       ],
       child: Builder(
         builder: (context) => MaterialApp.router(
