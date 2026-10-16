@@ -424,7 +424,9 @@ second client.
   `AppTheme.displayFontFamily`; never write a font family name in a widget.
 - **Assets:** every path is a `static const` on `AppAssets`, registered in
   `pubspec.yaml`.
-- **Page headers:** a page with a back button and a title uses
+- **Page headers:** a page with a title uses `PageHeader`; a page with no
+  back button (a tab's root) gets an optional `showBack` (default true)
+  added to `PageHeader` in place. A page with a back button and a title uses
   `PageHeader` as its app bar, wrapped in a small feature widget that
   passes the title, the back action and anything shown at the end.
 - **Routes:** every route is an entry in the `AppRoute` enum
@@ -670,8 +672,10 @@ For a small user-owned list whose **device copy is the truth** (kept in
 - Writes go to the device only and return at once; the bloc then pushes
   in the background (`unawaited(push…)`). The next tap never waits on the
   network.
-- One push path, one at a time; a change made during a push stays
-  `pending`.
+- The pending / push / sync decisions live in the repository (`push<X>`,
+  `sync<X>`), as MyMali's wishlist does; the bloc only calls the use cases.
+- Pushes keep the app's own timing (one per change, or merged and one at a
+  time, whichever it had); a change made during a push stays `pending`.
 - A sync on start: while `pending` the device wins and is sent; otherwise
   the server's copy replaces the device's.
 - Failed pushes are silent and retried by the next push or sync.
