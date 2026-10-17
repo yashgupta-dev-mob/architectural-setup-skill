@@ -6,7 +6,7 @@
 # analyze / test / git results next to the run directory.
 set -uo pipefail
 
-WORK="/c/Users/Katyayani/Documents/flutter/mymali-architecture-skill/dev"
+WORK="/c/Users/Katyayani/Documents/flutter/architectural-setup-skill/dev"
 SAMPLE="$1"
 RUN="$2"
 MODE="${3:-noskill}"
@@ -34,10 +34,10 @@ git rev-parse HEAD > "$OUT/base_commit.txt"
 
 PROMPT="$(cat "$WORK/harness/scenario.md")"
 if [ "$MODE" = "skill" ]; then
-  PROMPT="$(printf 'Use the applying-mymali-architecture skill for this task.\n\n%s' "$PROMPT")"
+  PROMPT="$(printf 'Use the architectural-setup skill for this task.\n\n%s' "$PROMPT")"
   # A project-local copy of the skill, kept out of the app's git history.
   mkdir -p .claude/skills
-  cp -r "$WORK/../applying-mymali-architecture" .claude/skills/
+  cp -r "$WORK/../architectural-setup" .claude/skills/
   echo ".claude/" >> .git/info/exclude
 fi
 printf '%s' "$PROMPT" > "$OUT/prompt.txt"

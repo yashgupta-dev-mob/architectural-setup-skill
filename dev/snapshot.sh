@@ -9,7 +9,7 @@ set -euo pipefail
 
 MYMALI="${1:-/c/Users/Katyayani/Documents/flutter/mymali}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-T="$ROOT/applying-mymali-architecture/templates"
+T="$ROOT/architectural-setup/templates"
 
 copy() { # module path...
   local module="$1"; shift
