@@ -178,7 +178,9 @@ value; `.env` is listed under `flutter: assets:` in `pubspec.yaml` and in
 ## A whole feature
 `reference/support_feature/` is one complete feature with its tests
 (remote and local data sources, model, repository, both use cases, bloc
-with `isStale`, page, header wrapping `PageHeader`, texts helper). It is
+with `isStale`, page, header wrapping `PageHeader`, texts helper). Its
+header is a new page's; a migrated page keeps its own app bar through
+`AppHeaderBar` instead (`rules/AGENTS.md` section 11). It is
 **cache-first**; a network-only feature has the same shape without the
 local data source, the `GetCached…` use case and the `isStale` /
 `isRefreshing` fields. Read it for shape only: its content belongs to

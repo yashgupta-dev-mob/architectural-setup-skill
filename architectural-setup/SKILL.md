@@ -29,11 +29,12 @@ does.
 |---|---|
 | Folders, class, file and method names | Endpoints, headers, bodies, statuses, timeouts |
 | The services (`NetworkingService`, `Env`, `PrefUtils`, `SecureStorage`, `LocalCache`, `sl`, `AppRouter`) | Each feature's data strategy (network-only, cache-first, device-first) |
-| The UI kit: `PrimaryButton`, `UniversalFormField`, `PageHeader`, `ReloadWidget`, skeletons, and feedback through `SnackBar` / `AppInfoSheet` (toast packages go) | Every text the user reads, every storage key, every analytics event |
+| The UI kit: `PrimaryButton`, `UniversalFormField`, `ReloadWidget`, skeletons, and feedback through `SnackBar` / `AppInfoSheet` (toast packages go) | Every text the user reads, every storage key, every analytics event |
 | Start-up gains `Env.load()` and the installed services' `init()` | What the first screen is and what decides it |
 | Debug builds log each request (`CurlLoggerInterceptor`); release builds log nothing | The colour values, the `ThemeData` each mode builds, and the theme mode rule |
 | Colours move into `AppColors` / `AppTheme` | Navigation: where each action leads, push vs replace, back behaviour |
-| Network images go through `AppNetworkImage` (disk-cached); a whole-screen spinner becomes a `skeletonizer` skeleton of the same screen; app bars become `PageHeader` | Which data is shown, when, and from where |
+| Network images go through `AppNetworkImage` (disk-cached); a whole-screen spinner becomes a `skeletonizer` skeleton of the same screen | Which data is shown, when, and from where |
+| App bars move into a small feature header widget built on `AppHeaderBar` | **Every page's app bar, exactly**: colour, background image, title text and style, leading icon, actions, centring, height, elevation. Never replaced by `PageHeader` |
 | Storage moves to the standard stores (`SecureStorage`, `LocalCache`, `PrefUtils`) | What is stored: every value moves over once from its old key, so no user loses it |
 
 These are the architecture, not optional extras: install and use them even
@@ -49,6 +50,17 @@ shows the scheme's colour instead: list each such case in
 `MIGRATION_NOTES.md` so the owner can decide; do not change the theme to
 compensate. Never add a restyle flag to a shared
 widget to imitate an old widget's look.
+
+**App bars never change.** Each page keeps the header it had, pixel for
+pixel. A Material `AppBar` stays one, built through `AppHeaderBar` (a thin
+`AppBar` wrapper with an optional background image) inside a feature
+`<Screen>Header` widget set as `Scaffold.appBar`, with the old colours
+read from `AppTones` / the `ColorScheme` and the old image from
+`AppAssets`. A `SliverAppBar` stays a `SliverAppBar`; a header the page
+drew in its body stays that header, as a feature widget. Header content
+stays where it was: tabs, pickers and menus are not moved into or out of
+the bar. `PageHeader` is only for pages written after the migration in an
+app whose pages already use it; it never replaces an existing header.
 
 ## The procedure
 
@@ -122,6 +134,8 @@ moved and deleted; absent → nothing happens.
 | A home widget swapped in place on sign-in / sign-out | a `redirect` between exactly those two locations, so routes the old app left alone stay untouched |
 | A "Retry" text button on a failed screen | `ReloadWidget`; its "Retry" is the button's tooltip and label for screen readers |
 | A settings switch row | a Material `SwitchListTile` with theme colours (the UI kit has no switch yet) |
+| An `AppBar` (colour, `flexibleSpace` image, title style, leading, actions) | a feature `<Screen>Header` returning `AppHeaderBar` with the same values (colours through `AppTones` / `ColorScheme`, image through `AppAssets`), set as `Scaffold.appBar`; a `SliverAppBar` stays a `SliverAppBar` |
+| A header drawn in the page body | the same header as a feature widget, same look |
 | A floating action button | a Material `FloatingActionButton` with theme or tone colours (the kit has none) |
 | Exceptions the old code let propagate (TLS errors, cancels) | `NetworkingService` turns every "no response" into an `AppException`; say so in `MIGRATION_NOTES.md` |
 | A helper several data sources share (reading an error body) | `lib/core/utils/`, app-specific, named for what it does |
@@ -163,9 +177,11 @@ moved and deleted; absent → nothing happens.
 - "Change the key / text / colour, it's cleaner" → keep the value.
 - "Other apps have portrait lock / Firebase / Supabase, add it" → only what the
   app already had.
-- "Keep it in prefs / keep the AppBar / skip the skeleton so nothing
-  changes" → the standard store and kit, with the old values moved over and the
-  old texts inside.
+- "Keep it in prefs / skip the skeleton so nothing changes" → the
+  standard store and kit, with the old values moved over and the old
+  texts inside.
+- "Swap the AppBar for `PageHeader`, it's the kit's header" → never; the
+  app bar keeps its exact look through `AppHeaderBar`.
 - "Only one host, so no `ApiHost`" / "trim the form helper to what we use"
   → install the module whole; names exist even when there is one value.
 
@@ -186,3 +202,4 @@ moved and deleted; absent → nothing happens.
 | A use case taking a `String` / `bool` | A params class (`GetNotesParams`) or an entity |
 | `Failure` in `core/error/failures.dart` | `lib/core/app/failure.dart`, from the templates |
 | Retry as a `TextButton` on a failed screen | `ReloadWidget` |
+| App bar replaced by `PageHeader` (rounded, tinted, serif title) | The page's old `AppBar` rebuilt with `AppHeaderBar`: same colour, image, title, icons, actions |

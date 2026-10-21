@@ -424,11 +424,16 @@ second client.
   `AppTheme.displayFontFamily`; never write a font family name in a widget.
 - **Assets:** every path is a `static const` on `AppAssets`, registered in
   `pubspec.yaml`.
-- **Page headers:** a page with a title uses `PageHeader`; a page with no
-  back button (a tab's root) gets an optional `showBack` (default true)
-  added to `PageHeader` in place. A page with a back button and a title uses
-  `PageHeader` as its app bar, wrapped in a small feature widget that
-  passes the title, the back action and anything shown at the end.
+- **App bars keep the app's look.** Every page keeps the header it had
+  before the migration, exactly: a Material `AppBar` is rebuilt with
+  `AppHeaderBar` (same background colour and image, title and its style,
+  leading icon, actions, centring, elevation) inside a small feature
+  `<Screen>Header` widget set as `Scaffold.appBar`; a `SliverAppBar`
+  stays one; a header drawn in the body stays that header as a feature
+  widget. Never replace an existing header with `PageHeader`, and never
+  move tabs or actions into or out of the bar. `PageHeader` is only for
+  new pages in an app whose pages already use it; a page with no back
+  button gets an optional `showBack` (default true) added to it in place.
 - **Routes:** every route is an entry in the `AppRoute` enum
   (`app_routes.dart`, name + path) and registered in `AppRouter`
   (`app_router.dart`). Navigate with `context.goNamed(AppRoute.x.name)` /
@@ -737,7 +742,8 @@ a feature widget and stays in the feature.
 | `FilterChipButton` | `chips/filter_chip_button.dart` | Pill-shaped filter trigger or pickable chip; tabs on a `PageHeader` | `label`, `icon`, `showDropdownArrow`, `selected`, `fillWhenSelected`, `onHeader`, `onPressed` |
 | `SectionHeader` | `section_header.dart` | Section title with an optional "View All →" | `title`, `actionLabel`, `onAction`, `actionKey` |
 | `SectionLabel` | `section_label.dart` | Small uppercase caption naming a block | `title`, `padding` |
-| `PageHeader` | `page_header.dart` | The app bar of every page with a back button (section 11) | `title`, `onBack`, `subtitle`, `subtitleKey`, `trailing`, `bottom`, `backKey`, `backTooltip` |
+| `AppHeaderBar` | `app_header_bar.dart` | The app's own Material app bar, kept exactly as each page had it (section 11) | `title`, `leading`, `automaticallyImplyLeading`, `actions`, `backgroundColor`, `foregroundColor`, `backgroundImage` (an `AppAssets` path, cover), `imageColor` (under the image), `imageOpacity` (default opaque), `elevation` (default 0), `centerTitle`, `bottom` |
+| `PageHeader` | `page_header.dart` | Header of new pages in an app that already uses it; never replaces an existing app bar (section 11) | `title`, `onBack`, `subtitle`, `subtitleKey`, `trailing`, `bottom`, `backKey`, `backTooltip` |
 | `IconListTile` | `icon_list_tile.dart` | A tappable row in a list of choices or settings | `icon`, `title`, `subtitle`, `overline`, `onTap`, `leading`, `showChevron`, `isLoading`, `filled`, `badgeLabel`, `dense` |
 | `FormSectionTitle` | `form_section_title.dart` | Heading of a group of fields | `title`, `icon`, `description`, `topPadding` |
 | `AppSearchBar` | `search/app_search_bar.dart` | The search input | `onChanged`, `hintText`, `initialValue`, `autofocus`, `onSubmitted`, `trailingIcon`, `onTrailingPressed`, `trailingTooltip` |

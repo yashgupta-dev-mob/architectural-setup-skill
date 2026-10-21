@@ -42,6 +42,10 @@ and it survives.
   with data on screen and with nothing on screen, in-flight sharing.
 
 ## Screens (one block per screen)
+- App bar / header, exactly: `AppBar` or a header in the body, background
+  colour and image, title text and style, centring, elevation, leading
+  icon, actions (icons and what they do), anything under it (tabs). It
+  must look the same after the migration.
 - Title, fields (labels, hints, keyboard), buttons (labels, when enabled,
   progress), validation texts, what each action does, navigation (`go`,
   `push`, `pop`, redirects), what is shown in each state (loading, empty,
